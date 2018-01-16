@@ -3,10 +3,10 @@
   (general
     (links 76)
     (no_connects 0)
-    (area 125.109499 82.909499 170.490501 118.290501)
+    (area 12.604132 82.245139 171.154861 196.040743)
     (thickness 1.6002)
     (drawings 23)
-    (tracks 347)
+    (tracks 346)
     (zones 0)
     (modules 36)
     (nets 67)
@@ -14,12 +14,12 @@
 
   (page A4)
   (title_block
-    (title "Serial Bricklet")
-    (date "5 mar 2015")
+    (title "RS232 Bricklet 2.0")
+    (date 2018-01-16)
     (rev 1.0)
     (company "Tinkerforge GmbH")
     (comment 1 "Licensed under CERN OHL v.1.1")
-    (comment 2 "Copyright (©) 2015, B.Nordmeyer <bastian@tinkerforge.com>")
+    (comment 2 "Copyright (©) 2018, L.Lauer <lukas@tinkerforge.com>")
   )
 
   (layers
@@ -43,7 +43,7 @@
   )
 
   (setup
-    (last_trace_width 0.2)
+    (last_trace_width 0.249)
     (user_trace_width 0.2)
     (user_trace_width 0.25)
     (user_trace_width 0.29972)
@@ -7150,10 +7150,11 @@
   (gr_text tinkerforge.com (at 165.2 105 180) (layer F.SilkS)
     (effects (font (size 0.8001 0.8001) (thickness 0.14986)))
   )
-  (gr_text "RS232\n1.0" (at 128.7 109.6 180) (layer F.SilkS) (tstamp 54F8157B)
+  (gr_text "RS232\n2.0" (at 128.7 109.6 180) (layer F.SilkS) (tstamp 54F8157B)
     (effects (font (size 0.8001 0.8001) (thickness 0.14986)))
   )
 
+  (via (at 142.6 99.4) (size 0.70104) (drill 0.24892) (layers Vorderseite Rückseite) (net 1) (status C00000))
   (segment (start 168.6 101.45) (end 168.6 100.6) (width 0.2) (layer Vorderseite) (net 1))
   (via (at 168.6 100.6) (size 0.55) (drill 0.25) (layers Vorderseite Rückseite) (net 1))
   (segment (start 129.98 107.55) (end 129.98 107.08) (width 0.2) (layer Vorderseite) (net 1))
@@ -7205,8 +7206,6 @@
   (via (at 135.05 100.15) (size 0.55) (drill 0.25) (layers Vorderseite Rückseite) (net 1))
   (segment (start 135.05 100.78) (end 135.05 99.30992) (width 0.55) (layer Vorderseite) (net 1))
   (segment (start 135.05 99.30992) (end 134.9999 99.25982) (width 0.55) (layer Vorderseite) (net 1) (tstamp 5A5E1DA1))
-  (segment (start 138.99066 96.65172) (end 139.85172 96.65172) (width 0.2) (layer Vorderseite) (net 1))
-  (segment (start 139.85172 96.65172) (end 142.6 99.4) (width 0.2) (layer Vorderseite) (net 1) (tstamp 5A5E1D7F))
   (segment (start 134.9999 100.7299) (end 135.05 100.78) (width 0.2) (layer Vorderseite) (net 1) (tstamp 5A5E1C35))
   (segment (start 136.6001 95.5401) (end 136.55 95.49) (width 0.2) (layer Vorderseite) (net 1) (tstamp 5A5E1C2C))
   (segment (start 138.99066 96.65172) (end 138.99066 95.79934) (width 0.2) (layer Vorderseite) (net 1))
