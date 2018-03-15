@@ -34,19 +34,19 @@ void communication_tick(void);
 void communication_init(void);
 
 // Constants
-#define RS232_V2_BAUDRATE_300 0
-#define RS232_V2_BAUDRATE_600 1
-#define RS232_V2_BAUDRATE_1200 2
-#define RS232_V2_BAUDRATE_2400 3
-#define RS232_V2_BAUDRATE_4800 4
-#define RS232_V2_BAUDRATE_9600 5
-#define RS232_V2_BAUDRATE_14400 6
-#define RS232_V2_BAUDRATE_19200 7
-#define RS232_V2_BAUDRATE_28800 8
-#define RS232_V2_BAUDRATE_38400 9
-#define RS232_V2_BAUDRATE_57600 10
-#define RS232_V2_BAUDRATE_115200 11
-#define RS232_V2_BAUDRATE_230400 12
+#define RS232_V2_BAUDRATE_300 300
+#define RS232_V2_BAUDRATE_600 600
+#define RS232_V2_BAUDRATE_1200 1200
+#define RS232_V2_BAUDRATE_2400 2400
+#define RS232_V2_BAUDRATE_4800 4800
+#define RS232_V2_BAUDRATE_9600 9600
+#define RS232_V2_BAUDRATE_14400 14400
+#define RS232_V2_BAUDRATE_19200 19200
+#define RS232_V2_BAUDRATE_28800 28800
+#define RS232_V2_BAUDRATE_38400 38400
+#define RS232_V2_BAUDRATE_57600 57600
+#define RS232_V2_BAUDRATE_115200 115200
+#define RS232_V2_BAUDRATE_230400 230400
 
 #define RS232_V2_PARITY_NONE 0
 #define RS232_V2_PARITY_ODD 1
@@ -62,15 +62,13 @@ void communication_init(void);
 #define RS232_V2_WORDLENGTH_7 7
 #define RS232_V2_WORDLENGTH_8 8
 
-#define RS232_V2_HARDWARE_FLOWCONTROL_OFF 0
-#define RS232_V2_HARDWARE_FLOWCONTROL_ON 1
+#define RS232_V2_FLOWCONTROL_OFF 0
+#define RS232_V2_FLOWCONTROL_SOFTWARE 1
+#define RS232_V2_FLOWCONTROL_HARDWARE 2
 
-#define RS232_V2_SOFTWARE_FLOWCONTROL_OFF 0
-#define RS232_V2_SOFTWARE_FLOWCONTROL_ON 1
-
-#define RS232_V2_ERROR_OVERRUN 1
-#define RS232_V2_ERROR_PARITY 2
-#define RS232_V2_ERROR_FRAMING 4
+#define RS232_V2_ERROR_OVERRUN 0
+#define RS232_V2_ERROR_PARITY 1
+#define RS232_V2_ERROR_FRAMING 2
 
 #define RS232_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define RS232_V2_BOOTLOADER_MODE_FIRMWARE 1
@@ -149,12 +147,11 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t baudrate;
+	uint32_t baudrate;
 	uint8_t parity;
 	uint8_t stopbits;
 	uint8_t wordlength;
-	uint8_t hardware_flowcontrol;
-	uint8_t software_flowcontrol;
+	uint8_t flowcontrol;
 } __attribute__((__packed__)) SetConfiguration;
 
 typedef struct {
@@ -163,12 +160,11 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t baudrate;
+	uint32_t baudrate;
 	uint8_t parity;
 	uint8_t stopbits;
 	uint8_t wordlength;
-	uint8_t hardware_flowcontrol;
-	uint8_t software_flowcontrol;
+	uint8_t flowcontrol;
 } __attribute__((__packed__)) GetConfiguration_Response;
 
 typedef struct {

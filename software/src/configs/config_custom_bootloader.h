@@ -37,12 +37,10 @@
 #define BOOTLOADER_FLASH_EEPROM_SIZE   (4*256)
 #define BOOTLOADER_FLASH_SIZE          (200*1024 - BOOTLOADER_FLASH_EEPROM_SIZE)
 
-
 // --- Oscilater defines ---
 #define OSCHP_FREQUENCY 16000000
-#define DCLK_CLOCK_SRC  1
-#define DCO1_CAL_SRC    1
-
+#define DCLK_CLOCK_SRC  DCLK_CLOCK_SRC_EXT_XTAL
+#define DCO1_CAL_SRC    DCO1_CAL_SRC_EXT
 
 // --- SPITFP ---
 #define SPITFP_USIC_CHANNEL         USIC0_CH1
@@ -50,21 +48,21 @@
 
 #define SPITFP_SCLK_PIN             P1_3
 #define SPITFP_SCLK_INPUT           XMC_USIC_CH_INPUT_DX1
-#define SPITFP_SCLK_SOURCE          0b000 // DX1A
+#define SPITFP_SCLK_SOURCE          0b000 // DX1A.
 
 #define SPITFP_SELECT_PIN           P1_1
 #define SPITFP_SELECT_INPUT         XMC_USIC_CH_INPUT_DX2
-#define SPITFP_SELECT_SOURCE        0b100 // DX2E
+#define SPITFP_SELECT_SOURCE        0b100 // DX2E.
 
 #define SPITFP_MOSI_PIN             P1_2
 #define SPITFP_MOSI_INPUT           XMC_USIC_CH_INPUT_DX0
-#define SPITFP_MOSI_SOURCE          0b001 // DX0B
+#define SPITFP_MOSI_SOURCE          0b001 // DX0B.
 
 #define SPITFP_MISO_PIN             P1_6
 #define SPITFP_MISO_PIN_AF          (XMC_GPIO_MODE_OUTPUT_PUSH_PULL_ALT2 | P1_6_AF_U0C1_DOUT0)
 
 #define SPITFP_RECEIVE_BUFFER_SIZE  1024
-#define SPITFP_RECEIVE_BUFFER_MASK  (SPITFP_RECEIVE_BUFFER_SIZE-1) // If size is power of 2
+#define SPITFP_RECEIVE_BUFFER_MASK  (SPITFP_RECEIVE_BUFFER_SIZE-1) // If size is power of 2.
 
 #define SPITFP_SERVICE_REQUEST_RX   0
 #define SPITFP_SERVICE_REQUEST_TX   1
@@ -84,8 +82,10 @@
 
 // --- BOOTLOADER FUNCTIONS ---
 
-// define bootloader functions to put them into the BootloaderFunctions struct
-// These functions are in the bootloader code and can be used from the firmware
+/*
+ * Define bootloader functions to put them into the BootloaderFunctions struct.
+ * These functions are in the bootloader code and can be used from the firmware.
+ */
 
 #define BOOTLOADER_FUNCTION_SPITFP_TICK
 #define BOOTLOADER_FUNCTION_SEND_ACK_AND_MESSAGE

@@ -22,20 +22,23 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "configs/config.h"
-
 #include "bricklib2/bootloader/bootloader.h"
 #include "bricklib2/hal/system_timer/system_timer.h"
 #include "bricklib2/logging/logging.h"
+
+#include "configs/config.h"
 #include "communication.h"
+#include "rs232.h"
 
 int main(void) {
 	logging_init();
 	logd("Start RS232 V2 Bricklet\n\r");
 
 	communication_init();
+	rs232_init();
 
 	while(true) {
+		rs232_tick();
 		bootloader_tick();
 		communication_tick();
 	}

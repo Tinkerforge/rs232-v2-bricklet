@@ -25,7 +25,7 @@
 #include "xmc_device.h"
 
 #define STARTUP_SYSTEM_INIT_ALREADY_DONE
-#define SYSTEM_TIMER_FREQUENCY 1000 // Use 1 kHz system timer
+#define SYSTEM_TIMER_FREQUENCY 1000 // Use 1 kHz system timer.
 
 #define UARTBB_TX_PIN P2_0
 
