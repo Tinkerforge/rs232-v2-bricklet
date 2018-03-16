@@ -43,18 +43,128 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_SET_BUFFER_CONFIG: return set_buffer_config(message);
 		case FID_GET_BUFFER_CONFIG: return get_buffer_config(message, response);
 		case FID_GET_BUFFER_STATUS: return get_buffer_status(message, response);
+		case FID_GET_ERROR_COUNT: return get_error_count(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
 
 BootloaderHandleMessageResponse write_low_level(const WriteLowLevel *data, WriteLowLevel_Response *response) {
+	uint8_t written = 0;
 	response->header.length = sizeof(WriteLowLevel_Response);
+
+	if((data->message_length - data->message_chunk_offset) >= sizeof(data->message_chunk_data)) {
+		// Whole chunk with data.
+		for(written = 0; written < sizeof(data->message_chunk_data); written++) {
+			if(!ringbuffer_add(&rs232.rb_tx, data->message_chunk_data[written])) {
+				break;
+			}
+		}
+	}
+	else {
+		// Partial chunk with data.
+		for(written = 0; written < (data->message_length - data->message_chunk_offset); written++) {
+			if(!ringbuffer_add(&rs232.rb_tx, data->message_chunk_data[written])) {
+				break;
+			}
+		}
+	}
+
+	if(written != 0) {
+		XMC_USIC_CH_TXFIFO_EnableEvent(RS232_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
+		XMC_USIC_CH_TriggerServiceRequest(RS232_USIC, RS232_SERVICE_REQUEST_TX);
+	}
+
+	response->message_chunk_written = written;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
 BootloaderHandleMessageResponse read_low_level(const ReadLowLevel *data, ReadLowLevel_Response *response) {
+	uint16_t rb_available = 0;
+	response->message_length = 0;
+	response->message_chunk_offset = 0;
 	response->header.length = sizeof(ReadLowLevel_Response);
+
+	// This function operates only when read callback is disabled.
+	if(rs232.read_callback_enabled) {
+		reset_read_stream_status();
+
+		return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+	}
+
+	rb_available = ringbuffer_get_used(&rs232.rb_rx);
+
+	if(rb_available == 0) {
+		// There are no data available at the moment in the RX buffer.
+		reset_read_stream_status();
+
+		return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+	}
+
+	if(!rs232.read_stream_status.in_progress) {
+		// Start of new stream.
+		rs232.read_stream_status.in_progress = true;
+
+		if(data->length >= rb_available) {
+			/*
+			 * Requested total data is more than or equal to currently available data.
+			 * So create a stream to transfer all of the currently available data.
+			 */
+			rs232.read_stream_status.stream_total_length = rb_available;
+		}
+		else {
+			rs232.read_stream_status.stream_total_length = data->length;
+		}
+
+		rs232.read_stream_status.stream_chunk_offset = 0;
+
+		response->message_chunk_offset = rs232.read_stream_status.stream_chunk_offset;
+		response->message_length = rs232.read_stream_status.stream_total_length;
+
+		if(response->message_length <= sizeof(response->message_chunk_data)) {
+			// Available data fits in a single chunk.
+			for(uint8_t i = 0; i < response->message_length; i++) {
+				ringbuffer_get(&rs232.rb_rx, (uint8_t *)&response->message_chunk_data[i]);
+			}
+
+			reset_read_stream_status();
+		}
+		else {
+			// Requested data requires more than one chunk.
+			for(uint8_t i = 0; i < sizeof(response->message_chunk_data); i++) {
+				ringbuffer_get(&rs232.rb_rx, (uint8_t *)&response->message_chunk_data[i]);
+			}
+
+			rs232.read_stream_status.stream_sent += sizeof(response->message_chunk_data);
+		}
+	}
+	else {
+		// Handle a stream which is already in progress.
+		response->message_chunk_offset = rs232.read_stream_status.stream_sent;
+		response->message_length = rs232.read_stream_status.stream_total_length;
+
+		if((rs232.read_stream_status.stream_total_length - rs232.read_stream_status.stream_sent) >= \
+			sizeof(response->message_chunk_data)) {
+				for(uint8_t i = 0; i < sizeof(response->message_chunk_data); i++) {
+					ringbuffer_get(&rs232.rb_rx, (uint8_t *)&response->message_chunk_data[i]);
+				}
+
+				rs232.read_stream_status.stream_sent += sizeof(response->message_chunk_data);
+		}
+		else {
+			for(uint8_t i = 0; i < (rs232.read_stream_status.stream_total_length - rs232.read_stream_status.stream_sent); i++) {
+				ringbuffer_get(&rs232.rb_rx, (uint8_t *)&response->message_chunk_data[i]);
+			}
+
+			rs232.read_stream_status.stream_sent += \
+				(rs232.read_stream_status.stream_total_length - rs232.read_stream_status.stream_sent);
+		}
+
+		if(rs232.read_stream_status.stream_total_length - rs232.read_stream_status.stream_sent == 0) {
+			// Last chunk of the stream.
+			reset_read_stream_status();
+		}
+	}
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
@@ -175,44 +285,127 @@ BootloaderHandleMessageResponse get_buffer_status(const GetBufferStatus *data, G
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data, GetErrorCount_Response *response) {
+	logd("[+] RS232-V2: get_error_count()\n\r");
+
+	response->header.length = sizeof(GetErrorCount_Response);
+	response->error_count_overrun = rs232.error_count_overrun;
+	response->error_count_parity = rs232.error_count_parity;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
 bool handle_read_low_level_callback(void) {
-	static bool is_buffered = false;
+	static uint16_t used = 0;
 	static ReadLowLevel_Callback cb;
+	static bool is_buffered = false;
+	static uint16_t count_rb_read = 0;
 
 	if(!is_buffered) {
-		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(ReadLowLevel_Callback), FID_CALLBACK_READ_LOW_LEVEL);
-		// TODO: Implement ReadLowLevel callback handling
+		if(!rs232.read_callback_enabled) {
+			reset_read_stream_status();
+			is_buffered = false;
 
-		return false;
+			return false;
+		}
+
+		used = ringbuffer_get_used(&rs232.rb_rx);
+
+		if(used > 0 || rs232.read_stream_status.in_progress) {
+			tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(ReadLowLevel_Callback), FID_CALLBACK_READ_LOW_LEVEL);
+			cb.message_length = 0;
+			cb.message_chunk_offset = 0;
+
+			if(!rs232.read_stream_status.in_progress) {
+				// Start of new stream.
+				reset_read_stream_status();
+
+				cb.message_length = used;
+				cb.message_chunk_offset = 0;
+
+				rs232.read_stream_status.in_progress = true;
+				rs232.read_stream_status.stream_total_length = used;
+
+				if(cb.message_length <= sizeof(cb.message_chunk_data)) {
+					// Available data fits in a single chunk.
+					reset_read_stream_status();
+					count_rb_read = cb.message_length;
+				}
+				else {
+					// Available data requires more than one chunk.
+					count_rb_read = sizeof(cb.message_chunk_data);
+				}
+			}
+			else {
+				// Handle a stream which is already in progress.
+				cb.message_chunk_offset = rs232.read_stream_status.stream_sent;
+				cb.message_length = rs232.read_stream_status.stream_total_length;
+
+				if((rs232.read_stream_status.stream_total_length - rs232.read_stream_status.stream_sent) >= \
+					sizeof(cb.message_chunk_data)) {
+						count_rb_read = sizeof(cb.message_chunk_data);
+				}
+				else {
+					count_rb_read = rs232.read_stream_status.stream_total_length - rs232.read_stream_status.stream_sent;
+				}
+
+				if(rs232.read_stream_status.stream_total_length == rs232.read_stream_status.stream_sent + count_rb_read) {
+					// Last chunk of the stream.
+					reset_read_stream_status();
+				}
+			}
+
+			if(count_rb_read > 0) {
+				for(uint8_t i = 0; i < count_rb_read; i++) {
+					ringbuffer_get(&rs232.rb_rx, (uint8_t *)&cb.message_chunk_data[i]);
+				}
+
+				rs232.read_stream_status.stream_sent += count_rb_read;
+			}
+		}
+		else {
+			reset_read_stream_status();
+			is_buffered = false;
+
+			return false;
+		}
 	}
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
 		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(ReadLowLevel_Callback));
 		is_buffered = false;
+
 		return true;
-	} else {
+	}
+	else {
 		is_buffered = true;
 	}
 
 	return false;
 }
 
-bool handle_error_callback(void) {
+bool handle_error_count_callback(void) {
 	static bool is_buffered = false;
-	static Error_Callback cb;
+	static ErrorCount_Callback cb;
 
 	if(!is_buffered) {
-		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(Error_Callback), FID_CALLBACK_ERROR);
-		// TODO: Implement Error callback handling
+		if (!rs232.do_error_count_callback) {
+			return false;
+		}
 
-		return false;
+		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(ErrorCount_Callback), FID_CALLBACK_ERROR_COUNT);
+		cb.error_count_overrun = rs232.error_count_overrun;
+		cb.error_count_parity = rs232.error_count_parity;
 	}
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
-		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(Error_Callback));
+		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(ErrorCount_Callback));
 		is_buffered = false;
+		rs232.do_error_count_callback = false;
+
 		return true;
-	} else {
+	}
+	else {
 		is_buffered = true;
 	}
 

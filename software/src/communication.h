@@ -34,25 +34,11 @@ void communication_tick(void);
 void communication_init(void);
 
 // Constants
-#define RS232_V2_BAUDRATE_300 300
-#define RS232_V2_BAUDRATE_600 600
-#define RS232_V2_BAUDRATE_1200 1200
-#define RS232_V2_BAUDRATE_2400 2400
-#define RS232_V2_BAUDRATE_4800 4800
-#define RS232_V2_BAUDRATE_9600 9600
-#define RS232_V2_BAUDRATE_14400 14400
-#define RS232_V2_BAUDRATE_19200 19200
-#define RS232_V2_BAUDRATE_28800 28800
-#define RS232_V2_BAUDRATE_38400 38400
-#define RS232_V2_BAUDRATE_57600 57600
-#define RS232_V2_BAUDRATE_115200 115200
-#define RS232_V2_BAUDRATE_230400 230400
-
-#define RS232_V2_PARITY_NONE 0
-#define RS232_V2_PARITY_ODD 1
-#define RS232_V2_PARITY_EVEN 2
-#define RS232_V2_PARITY_FORCED_PARITY_1 3
-#define RS232_V2_PARITY_FORCED_PARITY_0 4
+#define RS232_V2_PARITY_NONE 1
+#define RS232_V2_PARITY_ODD 2
+#define RS232_V2_PARITY_EVEN 3
+#define RS232_V2_PARITY_FORCED_PARITY_1 4
+#define RS232_V2_PARITY_FORCED_PARITY_0 5
 
 #define RS232_V2_STOPBITS_1 1
 #define RS232_V2_STOPBITS_2 2
@@ -62,13 +48,9 @@ void communication_init(void);
 #define RS232_V2_WORDLENGTH_7 7
 #define RS232_V2_WORDLENGTH_8 8
 
-#define RS232_V2_FLOWCONTROL_OFF 0
-#define RS232_V2_FLOWCONTROL_SOFTWARE 1
-#define RS232_V2_FLOWCONTROL_HARDWARE 2
-
-#define RS232_V2_ERROR_OVERRUN 0
-#define RS232_V2_ERROR_PARITY 1
-#define RS232_V2_ERROR_FRAMING 2
+#define RS232_V2_FLOWCONTROL_OFF 1
+#define RS232_V2_FLOWCONTROL_SOFTWARE 2
+#define RS232_V2_FLOWCONTROL_HARDWARE 3
 
 #define RS232_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define RS232_V2_BOOTLOADER_MODE_FIRMWARE 1
@@ -100,9 +82,10 @@ void communication_init(void);
 #define FID_SET_BUFFER_CONFIG 9
 #define FID_GET_BUFFER_CONFIG 10
 #define FID_GET_BUFFER_STATUS 11
+#define FID_GET_ERROR_COUNT 12
 
-#define FID_CALLBACK_READ_LOW_LEVEL 12
-#define FID_CALLBACK_ERROR 13
+#define FID_CALLBACK_READ_LOW_LEVEL 13
+#define FID_CALLBACK_ERROR_COUNT 14
 
 typedef struct {
 	TFPMessageHeader header;
@@ -200,6 +183,16 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+} __attribute__((__packed__)) GetErrorCount;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint32_t error_count_overrun;
+	uint32_t error_count_parity;
+} __attribute__((__packed__)) GetErrorCount_Response;
+
+typedef struct {
+	TFPMessageHeader header;
 	uint16_t message_length;
 	uint16_t message_chunk_offset;
 	char message_chunk_data[60];
@@ -207,8 +200,9 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint8_t error;
-} __attribute__((__packed__)) Error_Callback;
+	uint32_t error_count_overrun;
+	uint32_t error_count_parity;
+} __attribute__((__packed__)) ErrorCount_Callback;
 
 
 // Function prototypes
@@ -223,16 +217,17 @@ BootloaderHandleMessageResponse set_break_condition(const SetBreakCondition *dat
 BootloaderHandleMessageResponse set_buffer_config(const SetBufferConfig *data);
 BootloaderHandleMessageResponse get_buffer_config(const GetBufferConfig *data, GetBufferConfig_Response *response);
 BootloaderHandleMessageResponse get_buffer_status(const GetBufferStatus *data, GetBufferStatus_Response *response);
+BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data, GetErrorCount_Response *response);
 
 // Callbacks
 bool handle_read_low_level_callback(void);
-bool handle_error_callback(void);
+bool handle_error_count_callback(void);
 
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
 #define COMMUNICATION_CALLBACK_HANDLER_NUM 2
 #define COMMUNICATION_CALLBACK_LIST_INIT \
 	handle_read_low_level_callback, \
-	handle_error_callback, \
+	handle_error_count_callback, \
 
 
 #endif

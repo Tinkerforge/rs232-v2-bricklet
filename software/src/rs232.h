@@ -40,10 +40,18 @@
 #define CONFIG_FLOWCONTROL_MAX 2
 
 typedef enum {
-	ERROR_OVERRUN = 1,
-	ERROR_PARITY,
-	ERROR_FRAMING = 4
-} RS232Error_t;
+	FC_STATE_RX_OK = 0,
+	FC_STATE_RX_WAIT,
+	FC_STATE_TX_OK,
+	FC_STATE_TX_WAIT,
+} RS232FlowControlState_t;
+
+typedef struct {
+	bool in_progress;
+	uint16_t stream_sent;
+	uint16_t stream_chunk_offset;
+	uint16_t stream_total_length;
+} RS232ReadStreamStatus_t;
 
 typedef struct {
 	uint32_t baudrate;
@@ -53,9 +61,11 @@ typedef struct {
 	int flowcontrol;
 	uint8_t oversampling;
 
+	uint32_t _error_count_parity;
+	uint32_t _error_count_overrun;
 	uint32_t error_count_parity;
 	uint32_t error_count_overrun;
-	uint32_t error_count_framing;
+	bool do_error_count_callback;
 
 	bool read_callback_enabled;
 
@@ -64,6 +74,11 @@ typedef struct {
 	uint8_t buffer[RS232_BUFFER_SIZE];
 	uint16_t buffer_size_rx;
 	uint16_t buffer_size_tx;
+
+	RS232ReadStreamStatus_t read_stream_status;
+
+	RS232FlowControlState_t flowcontrol_state_rx;
+	RS232FlowControlState_t flowcontrol_state_tx;
 } RS232_t;
 
 extern RS232_t rs232;
@@ -71,5 +86,6 @@ extern RS232_t rs232;
 void rs232_init(void);
 void rs232_tick(void);
 void rs232_apply_configuration(void);
+void reset_read_stream_status(void);
 
 #endif

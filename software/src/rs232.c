@@ -34,87 +34,71 @@
 
 #define rs232_rx_irq_handler  IRQ_Hdlr_11
 #define rs232_tx_irq_handler  IRQ_Hdlr_12
-//#define rs232_tff_irq_handler IRQ_Hdlr_13
-#define rs232_rxa_irq_handler IRQ_Hdlr_14
+#define rs232_rxa_irq_handler IRQ_Hdlr_13
+
+/*
+ * Set const pointers to RX ringbuffer variables.
+ * With this the compiler can properly optimize the access!
+ */
+
+// RX part of buffer always starts from 0.
+uint8_t  *const rs232_rb_rx_buffer = &(rs232.buffer[0]); 
+uint16_t *const rs232_rb_rx_end = &(rs232.rb_rx.end);
+uint16_t *const rs232_rb_rx_start = &(rs232.rb_rx.start);
+uint16_t *const rs232_rb_rx_size = &(rs232.rb_rx.size);
 
 RS232_t rs232;
 
-/*
-void __attribute__((optimize("-O3"))) rs232_tff_irq_handler(void) {
-	if((RS232_USIC.PSR_ASCMode & (XMC_UART_CH_STATUS_FLAG_TRANSMITTER_FRAME_FINISHED | XMC_UART_CH_STATUS_FLAG_TRANSFER_STATUS_BUSY)) ==
-		 XMC_UART_CH_STATUS_FLAG_TRANSMITTER_FRAME_FINISHED) {
-			 RS232_HALF_DUPLEX_RX_ENABLE();
-	}
-}
-*/
-
-void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs232_rx_irq_handler(void) {
-	logd("[+] IRQ: RX\n\r");
+void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs232_rx_irq_handler() {
 	while(!XMC_USIC_CH_RXFIFO_IsEmpty(RS232_USIC)) {
 		/*
-		// Instead of ringbuffer_add() we add the byte to the buffer
-		// by hand.
-		//
-		// We need to save the low watermark calculation overhead.
+		 * Instead of ringbuffer_add() we add the byte to the buffer by hand.
+		 * We need to save the low watermark calculation overhead.
+		 */
+		uint16_t new_end = *rs232_rb_rx_end + 1;
 
-		uint16_t new_end = *rs232_ringbuffer_rx_end + 1;
-
-		if(new_end >= *rs232_ringbuffer_rx_size) {
+		if(new_end >= *rs232_rb_rx_size) {
 			new_end = 0;
 		}
 
-		if(new_end == *rs232_ringbuffer_rx_start) {
-			rs232.error_count_overrun++;
+		if(new_end == *rs232_rb_rx_start) {
+			rs232._error_count_overrun++;
 
 			// In the case of an overrun we read the byte and throw it away.
-			volatile uint8_t __attribute__((unused)) _  = RS232_USIC.OUTR;
-		} else {
-			rs232_ringbuffer_rx_buffer[*rs232_ringbuffer_rx_end] = RS232_USIC.OUTR;
-			*rs232_ringbuffer_rx_end = new_end;
+			volatile uint8_t __attribute__((unused)) _  = RS232_USIC->OUTR;
 		}
-		*/
-
-		logd("[+] IRQ: RX=%c\n\r", RS232_USIC->OUTR);
+		else {
+			rs232_rb_rx_buffer[*rs232_rb_rx_end] = RS232_USIC->OUTR;
+			*rs232_rb_rx_end = new_end;
+		}
 	}
 }
 
-void __attribute__((optimize("-O3"))) rs232_rxa_irq_handler(void) {
-	logd("[+] IRQ: RXA\n\r");
-	// We get alternate rx interrupt if there is a parity error. In this case we
-	// still read the byte and give it to the user.
-	rs232.error_count_parity++;
-
-	rs232_rx_irq_handler();
-}
-
-void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs232_tx_irq_handler(void) {
-	logd("[+] IRQ: TX\n\r");
-	RS232_USIC->IN[0] = 'D';
-	RS232_USIC->IN[0] = 'E';
-	RS232_USIC->IN[0] = 'A';
-	RS232_USIC->IN[0] = 'D';
-	RS232_USIC->IN[0] = 'B';
-	RS232_USIC->IN[0] = 'E';
-	RS232_USIC->IN[0] = 'E';
-	RS232_USIC->IN[0] = 'F';
-	XMC_USIC_CH_TXFIFO_DisableEvent(RS232_USIC,
-																	XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
-	logd("[+] IRQ: TX:X\n\r");
-	return;
-	/*
+void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs232_tx_irq_handler() {
 	while(!XMC_USIC_CH_TXFIFO_IsFull(RS232_USIC)) {
-		// TX FIFO is not full, more data can be loaded on the FIFO from the ring buffer.
+		// TX FIFO is not full, more data can be loaded on the FIFO from the ringbuffer.
 		uint8_t data;
-		if(!ringbuffer_get(&rs232.ringbuffer_tx, &data)) {
-			// No more data to TX from ringbuffer, disable TX interrupt.
+
+		if(!ringbuffer_get(&rs232.rb_tx, &data)) {
+			// No more data to TX from the ringbuffer, disable TX interrupt.
 			XMC_USIC_CH_TXFIFO_DisableEvent(RS232_USIC,
-																			XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
+			                                XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
+
 			return;
 		}
 
-		RS232_USIC.IN[0] = data;
+		RS232_USIC->IN[0] = data;
 	}
-	*/
+}
+
+void __attribute__((optimize("-O3"))) rs232_rxa_irq_handler() {
+	/*
+	 * We get alternate RX interrupt if there is a parity error.
+	 * In this case we still read the byte and give it to the user.
+	 */
+	rs232_rx_irq_handler();
+
+	rs232._error_count_parity++;
 }
 
 static void rs232_init_hardware() {
@@ -137,7 +121,7 @@ static void rs232_init_hardware() {
 	 * Returned value 1 = -ve/0 voltage on RS232 side (RS232 logic 0).
 	 * Returned value 0 = +ve voltage on RS232 side (RS232 logic 1).
 	 *
-	 * uint32_t XMC_GPIO_GetInput(RS232_CTS_PIN); 
+	 * uint32_t XMC_GPIO_GetInput(RS232_CTS_PIN);
 	 */
 
 	// RX pin configuration.
@@ -167,9 +151,7 @@ static void rs232_init_hardware() {
 	cfg_uart_ch.stop_bits = rs232.stopbits;
 	cfg_uart_ch.data_bits = rs232.wordlength;
 	cfg_uart_ch.oversampling = rs232.oversampling;
-	// TODO: Should this be wordlength?
-	cfg_uart_ch.frame_length = \
-		rs232.wordlength + (rs232.parity == RS232_V2_PARITY_NONE ? 0 : 1);
+	cfg_uart_ch.frame_length = rs232.wordlength;
 
 	switch(rs232.parity) {
 		case RS232_V2_PARITY_NONE:
@@ -263,10 +245,6 @@ static void rs232_init_hardware() {
 	);
 
 	XMC_USIC_CH_EnableEvent(RS232_USIC, XMC_USIC_CH_EVENT_ALTERNATIVE_RECEIVE);
-
-	// FIXME: Just for test. Start a TX. Remove.
-	XMC_USIC_CH_TXFIFO_EnableEvent(RS232_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
-	XMC_USIC_CH_TriggerServiceRequest(RS232_USIC, RS232_SERVICE_REQUEST_TX);
 }
 
 static void rs232_init_buffer(void) {
@@ -298,29 +276,51 @@ void rs232_apply_configuration() {
 	rs232_init_hardware();
 }
 
+void reset_read_stream_status() {
+	rs232.read_stream_status.in_progress = false;
+	rs232.read_stream_status.stream_sent = 0;
+	rs232.read_stream_status.stream_chunk_offset = 0;
+	rs232.read_stream_status.stream_total_length = 0;
+}
+
 void rs232_init() {
 	logd("[+] RS232-V2: rs232_init()\n\r");
 
 	// Initialize RS232 default configuration.
-	rs232.baudrate = (uint32_t)RS232_V2_BAUDRATE_115200;
+	rs232.baudrate = 115200;
 	rs232.parity = RS232_V2_PARITY_NONE;
 	rs232.stopbits = (uint8_t)RS232_V2_STOPBITS_1;
 	rs232.wordlength = (uint8_t)RS232_V2_WORDLENGTH_8;
 	rs232.flowcontrol = RS232_V2_FLOWCONTROL_OFF;
 	rs232.oversampling = 16;
 
+	rs232._error_count_parity = 0;
+	rs232._error_count_overrun = 0;
 	rs232.error_count_parity = 0;
 	rs232.error_count_overrun = 0;
-	rs232.error_count_framing = 0;
+	rs232.do_error_count_callback = false;
 
 	rs232.read_callback_enabled = false;
 
 	rs232.buffer_size_rx = RS232_BUFFER_SIZE / 2;
 	rs232.buffer_size_tx = RS232_BUFFER_SIZE / 2;
 
+	rs232.flowcontrol_state_rx = FC_STATE_RX_OK;
+	rs232.flowcontrol_state_tx = FC_STATE_TX_OK;
+
+	reset_read_stream_status();
 	rs232_apply_configuration();
 }
 
 void rs232_tick() {
-  ;
+	// TODO: Implement flow control.
+
+	// TODO: Implement tick based RX FIFO drain.
+
+	if((rs232.error_count_parity != rs232._error_count_parity) ||
+		 (rs232.error_count_overrun != rs232._error_count_overrun)) {
+				rs232.error_count_parity = rs232._error_count_parity;
+				rs232.error_count_overrun = rs232._error_count_overrun;
+				rs232.do_error_count_callback = true;
+	}
 }
