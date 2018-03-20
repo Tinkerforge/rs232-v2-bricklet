@@ -50,7 +50,61 @@ uint16_t *const rs232_rb_rx_size = &(rs232.rb_rx.size);
 RS232_t rs232;
 
 void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs232_rx_irq_handler() {
+	NVIC_DisableIRQ((IRQn_Type)RS232_IRQ_RX);
+	NVIC_DisableIRQ((IRQn_Type)RS232_IRQ_RXA);
+
 	while(!XMC_USIC_CH_RXFIFO_IsEmpty(RS232_USIC)) {
+		uint8_t rx_byte = RS232_USIC->OUTR;
+		uint16_t rb_rx_used = (*rs232_rb_rx_end < *rs232_rb_rx_start) ? \
+		                      (*rs232_rb_rx_size + *rs232_rb_rx_end - *rs232_rb_rx_start) : \
+		                      (*rs232_rb_rx_end - *rs232_rb_rx_start);
+
+		if (rs232.flowcontrol != RS232_V2_FLOWCONTROL_OFF) {
+			// Flow control enabled.
+			if(rs232.flowcontrol == RS232_V2_FLOWCONTROL_SOFTWARE) {
+				// Software flow control.
+				if (rx_byte == FC_SW_XON) {
+					rs232.fc_sw_state_tx = FC_SW_STATE_TX_OK;
+
+					// We don't treat XON/XOFF control byte as data.
+					continue;
+				}
+				else if (rx_byte == FC_SW_XOFF) {
+					rs232.fc_sw_state_tx = FC_SW_STATE_TX_WAIT;
+
+					// We don't treat XON/XOFF control byte as data.
+					continue;
+				}
+
+				if((rs232.buffer_size_rx - rb_rx_used) <= FC_RB_RX_LIMIT) {
+					// We can't RX more data.
+
+					// TX XOFF from rs232_tick().
+					rs232.fc_sw_tx_xoff = true;
+					rs232.fc_sw_state_rx = FC_SW_STATE_RX_WAIT;
+				}
+			}
+			else if(rs232.flowcontrol == RS232_V2_FLOWCONTROL_HARDWARE) {
+				// Hardware flow control.
+				if((rs232.buffer_size_rx - rb_rx_used) <= FC_RB_RX_LIMIT) {
+					// We can't RX more data.
+
+					/*
+					 * XMC_GPIO_SetOutputHigh(RS232_RTS_PIN);
+					 * |
+					 * | ---> RS232 logic 0.
+					 *
+					 * XMC_GPIO_SetOutputLow(RS232_RTS_PIN);
+					 * |
+					 * | ---> RS232 logic 1.
+					 */
+
+					// De-assert RTS pin.
+					XMC_GPIO_SetOutputHigh(RS232_RTS_PIN);
+				}
+			}
+		}
+
 		/*
 		 * Instead of ringbuffer_add() we add the byte to the buffer by hand.
 		 * We need to save the low watermark calculation overhead.
@@ -68,16 +122,45 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs
 			volatile uint8_t __attribute__((unused)) _  = RS232_USIC->OUTR;
 		}
 		else {
-			rs232_rb_rx_buffer[*rs232_rb_rx_end] = RS232_USIC->OUTR;
+			//rs232_rb_rx_buffer[*rs232_rb_rx_end] = RS232_USIC->OUTR;
+			rs232_rb_rx_buffer[*rs232_rb_rx_end] = rx_byte;
 			*rs232_rb_rx_end = new_end;
 		}
 	}
+
+	NVIC_EnableIRQ((IRQn_Type)RS232_IRQ_RX);
+	NVIC_EnableIRQ((IRQn_Type)RS232_IRQ_RXA);
 }
 
 void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs232_tx_irq_handler() {
 	while(!XMC_USIC_CH_TXFIFO_IsFull(RS232_USIC)) {
 		// TX FIFO is not full, more data can be loaded on the FIFO from the ringbuffer.
 		uint8_t data;
+
+		if(rs232.flowcontrol != RS232_V2_FLOWCONTROL_OFF) {
+			if(rs232.flowcontrol == RS232_V2_FLOWCONTROL_SOFTWARE) {
+				if(rs232.fc_sw_state_tx == FC_SW_STATE_TX_WAIT) {
+					XMC_USIC_CH_TXFIFO_DisableEvent(RS232_USIC,
+					                                XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
+
+					return;
+				}
+			}
+			else if(rs232.flowcontrol == RS232_V2_FLOWCONTROL_HARDWARE) {
+				/*
+				 * XMC_GPIO_GetInput(RS232_CTS_PIN);
+				 * |
+				 * | ---> Return = 0 = RS232 logic 1.
+				 * | ---> Return = 1 = RS232 logic 0.
+				 */
+				if(XMC_GPIO_GetInput(RS232_CTS_PIN) == 1) {
+					XMC_USIC_CH_TXFIFO_DisableEvent(RS232_USIC,
+					                                XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
+
+					return;
+				}
+			}
+		}
 
 		if(!ringbuffer_get(&rs232.rb_tx, &data)) {
 			// No more data to TX from the ringbuffer, disable TX interrupt.
@@ -109,20 +192,10 @@ static void rs232_init_hardware() {
 		.mode = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
 		.output_level = XMC_GPIO_OUTPUT_LEVEL_LOW
 	};
-	/*
-	 * XMC_GPIO_SetOutputHigh(RS232_RTS_PIN); // -ve/0 voltage on RS232 side (RS232 logic 0).
-	 * XMC_GPIO_SetOutputLow(RS232_RTS_PIN); // +ve voltage on RS232 side (RS232 logic 1).
-	 */
 
   XMC_GPIO_CONFIG_t cts_pin_config = {
 		.mode = XMC_GPIO_MODE_INPUT_PULL_DOWN,
 	};
-	/*
-	 * Returned value 1 = -ve/0 voltage on RS232 side (RS232 logic 0).
-	 * Returned value 0 = +ve voltage on RS232 side (RS232 logic 1).
-	 *
-	 * uint32_t XMC_GPIO_GetInput(RS232_CTS_PIN);
-	 */
 
 	// RX pin configuration.
 	const XMC_GPIO_CONFIG_t rx_pin_config = {
@@ -164,16 +237,6 @@ static void rs232_init_hardware() {
 
 		case RS232_V2_PARITY_EVEN:
 			cfg_uart_ch.parity_mode = XMC_USIC_CH_PARITY_MODE_EVEN;
-			break;
-
-		case RS232_V2_PARITY_FORCED_PARITY_1:
-			// TODO: How to set sticky parity bit ?
-			cfg_uart_ch.parity_mode = XMC_USIC_CH_PARITY_MODE_NONE;
-			break;
-
-		case RS232_V2_PARITY_FORCED_PARITY_0:
-			// TODO: How to set sticky parity bit ?
-			cfg_uart_ch.parity_mode = XMC_USIC_CH_PARITY_MODE_NONE;
 			break;
 	}
 
@@ -305,18 +368,88 @@ void rs232_init() {
 	rs232.buffer_size_rx = RS232_BUFFER_SIZE / 2;
 	rs232.buffer_size_tx = RS232_BUFFER_SIZE / 2;
 
-	rs232.flowcontrol_state_rx = FC_STATE_RX_OK;
-	rs232.flowcontrol_state_tx = FC_STATE_TX_OK;
+	rs232.fc_sw_tx_xoff = false;
+	rs232.fc_sw_state_rx = FC_SW_STATE_RX_OK;
+	rs232.fc_sw_state_tx = FC_SW_STATE_TX_OK;
 
 	reset_read_stream_status();
 	rs232_apply_configuration();
 }
 
 void rs232_tick() {
-	// TODO: Implement flow control.
+	/*
+	 * We try to read the RX buffer in every tick:
+	 *
+	 * 1. We may have data in the buffer (just by coincidence).
+	 *    In this case we can save the interrupt call overhead.
+	 *
+	 * 2. The interrupt is only triggered if more then 16 bytes
+	 *    are in the RX buffer, so we always read the end of
+	 *    a big message or messages <16 bytes here.
+	 */
+	rs232_rx_irq_handler();
 
-	// TODO: Implement tick based RX FIFO drain.
+	// Manage flow control.
+	if(rs232.flowcontrol == RS232_V2_FLOWCONTROL_SOFTWARE) {
+		if(rs232.fc_sw_tx_xoff) {
+			rs232.fc_sw_tx_xoff = false;
 
+			// TX XOFF.
+			ringbuffer_add(&rs232.rb_tx, FC_SW_XOFF);
+			XMC_USIC_CH_TXFIFO_EnableEvent(RS232_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
+			XMC_USIC_CH_TriggerServiceRequest(RS232_USIC, RS232_SERVICE_REQUEST_TX);
+		}
+
+		if(rs232.fc_sw_state_tx == FC_SW_STATE_TX_OK) {
+			/*
+			 * Initiate TX.
+			 * There can be data in the TX buffer waiting to be TXed.
+			 */
+			XMC_USIC_CH_TXFIFO_EnableEvent(RS232_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
+			XMC_USIC_CH_TriggerServiceRequest(RS232_USIC, RS232_SERVICE_REQUEST_TX);
+		}
+
+		if((rs232.fc_sw_state_rx == FC_SW_STATE_RX_WAIT) &&
+		   ((rs232.buffer_size_rx - ringbuffer_get_used(&rs232.rb_rx)) > FC_RB_RX_LIMIT)) {
+		      // We can RX data.
+		      rs232.fc_sw_state_rx = FC_SW_STATE_RX_OK;
+		}
+	}
+	else if(rs232.flowcontrol == RS232_V2_FLOWCONTROL_HARDWARE) {
+		if((rs232.buffer_size_rx - ringbuffer_get_used(&rs232.rb_rx)) > FC_RB_RX_LIMIT) {
+			// We can RX data.
+
+			/*
+			 * XMC_GPIO_SetOutputHigh(RS232_RTS_PIN);
+			 * |
+			 * | ---> RS232 logic 0.
+			 *
+			 * XMC_GPIO_SetOutputLow(RS232_RTS_PIN);
+			 * |
+			 * | ---> RS232 logic 1.
+			 */
+
+			// Assert RTS pin.
+			XMC_GPIO_SetOutputLow(RS232_RTS_PIN);
+		}
+
+		/*
+		 * XMC_GPIO_GetInput(RS232_CTS_PIN);
+		 * |
+		 * | ---> Return = 0 = RS232 logic 1.
+		 * | ---> Return = 1 = RS232 logic 0.
+		 */
+		if(XMC_GPIO_GetInput(RS232_CTS_PIN) == 0) {
+			/*
+			 * Initiate TX.
+			 * There can be data in the TX buffer waiting to be TXed.
+			 */
+			XMC_USIC_CH_TXFIFO_EnableEvent(RS232_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
+			XMC_USIC_CH_TriggerServiceRequest(RS232_USIC, RS232_SERVICE_REQUEST_TX);
+		}
+	}
+
+	// Manage error count.
 	if((rs232.error_count_parity != rs232._error_count_parity) ||
 		 (rs232.error_count_overrun != rs232._error_count_overrun)) {
 				rs232.error_count_parity = rs232._error_count_parity;

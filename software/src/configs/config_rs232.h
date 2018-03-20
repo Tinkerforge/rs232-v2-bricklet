@@ -41,7 +41,7 @@
 // Interrupts.
 #define RS232_SERVICE_REQUEST_RX  2  // RX.
 #define RS232_SERVICE_REQUEST_TX  3  // TX.
-#define RS232_SERVICE_REQUEST_RXA 5  // Alternate RX (parity error).
+#define RS232_SERVICE_REQUEST_RXA 4  // Alternate RX (parity error).
 
 #define RS232_IRQ_RX              11
 #define RS232_IRQ_RX_PRIORITY     0

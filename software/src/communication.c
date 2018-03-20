@@ -39,7 +39,6 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_IS_READ_CALLBACK_ENABLED: return is_read_callback_enabled(message, response);
 		case FID_SET_CONFIGURATION: return set_configuration(message);
 		case FID_GET_CONFIGURATION: return get_configuration(message, response);
-		case FID_SET_BREAK_CONDITION: return set_break_condition(message);
 		case FID_SET_BUFFER_CONFIG: return set_buffer_config(message);
 		case FID_GET_BUFFER_CONFIG: return get_buffer_config(message, response);
 		case FID_GET_BUFFER_STATUS: return get_buffer_status(message, response);
@@ -239,12 +238,6 @@ BootloaderHandleMessageResponse get_configuration(const GetConfiguration *data, 
 	response->flowcontrol = (uint8_t)rs232.flowcontrol;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
-}
-
-BootloaderHandleMessageResponse set_break_condition(const SetBreakCondition *data) {
-	logd("[+] RS232-V2: set_break_condition()\n\r");
-
-	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
 BootloaderHandleMessageResponse set_buffer_config(const SetBufferConfig *data) {

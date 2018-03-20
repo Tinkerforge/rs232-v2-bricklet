@@ -34,11 +34,9 @@ void communication_tick(void);
 void communication_init(void);
 
 // Constants
-#define RS232_V2_PARITY_NONE 1
-#define RS232_V2_PARITY_ODD 2
-#define RS232_V2_PARITY_EVEN 3
-#define RS232_V2_PARITY_FORCED_PARITY_1 4
-#define RS232_V2_PARITY_FORCED_PARITY_0 5
+#define RS232_V2_PARITY_NONE 0
+#define RS232_V2_PARITY_ODD 1
+#define RS232_V2_PARITY_EVEN 2
 
 #define RS232_V2_STOPBITS_1 1
 #define RS232_V2_STOPBITS_2 2
@@ -48,9 +46,9 @@ void communication_init(void);
 #define RS232_V2_WORDLENGTH_7 7
 #define RS232_V2_WORDLENGTH_8 8
 
-#define RS232_V2_FLOWCONTROL_OFF 1
-#define RS232_V2_FLOWCONTROL_SOFTWARE 2
-#define RS232_V2_FLOWCONTROL_HARDWARE 3
+#define RS232_V2_FLOWCONTROL_OFF 0
+#define RS232_V2_FLOWCONTROL_SOFTWARE 1
+#define RS232_V2_FLOWCONTROL_HARDWARE 2
 
 #define RS232_V2_BOOTLOADER_MODE_BOOTLOADER 0
 #define RS232_V2_BOOTLOADER_MODE_FIRMWARE 1
@@ -78,14 +76,13 @@ void communication_init(void);
 #define FID_IS_READ_CALLBACK_ENABLED 5
 #define FID_SET_CONFIGURATION 6
 #define FID_GET_CONFIGURATION 7
-#define FID_SET_BREAK_CONDITION 8
-#define FID_SET_BUFFER_CONFIG 9
-#define FID_GET_BUFFER_CONFIG 10
-#define FID_GET_BUFFER_STATUS 11
-#define FID_GET_ERROR_COUNT 12
+#define FID_SET_BUFFER_CONFIG 8
+#define FID_GET_BUFFER_CONFIG 9
+#define FID_GET_BUFFER_STATUS 10
+#define FID_GET_ERROR_COUNT 11
 
-#define FID_CALLBACK_READ_LOW_LEVEL 13
-#define FID_CALLBACK_ERROR_COUNT 14
+#define FID_CALLBACK_READ_LOW_LEVEL 12
+#define FID_CALLBACK_ERROR_COUNT 13
 
 typedef struct {
 	TFPMessageHeader header;
@@ -152,11 +149,6 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
-	uint16_t break_time;
-} __attribute__((__packed__)) SetBreakCondition;
-
-typedef struct {
-	TFPMessageHeader header;
 	uint16_t send_buffer_size;
 	uint16_t receive_buffer_size;
 } __attribute__((__packed__)) SetBufferConfig;
@@ -213,7 +205,6 @@ BootloaderHandleMessageResponse disable_read_callback(const DisableReadCallback 
 BootloaderHandleMessageResponse is_read_callback_enabled(const IsReadCallbackEnabled *data, IsReadCallbackEnabled_Response *response);
 BootloaderHandleMessageResponse set_configuration(const SetConfiguration *data);
 BootloaderHandleMessageResponse get_configuration(const GetConfiguration *data, GetConfiguration_Response *response);
-BootloaderHandleMessageResponse set_break_condition(const SetBreakCondition *data);
 BootloaderHandleMessageResponse set_buffer_config(const SetBufferConfig *data);
 BootloaderHandleMessageResponse get_buffer_config(const GetBufferConfig *data, GetBufferConfig_Response *response);
 BootloaderHandleMessageResponse get_buffer_status(const GetBufferStatus *data, GetBufferStatus_Response *response);

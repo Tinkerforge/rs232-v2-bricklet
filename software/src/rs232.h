@@ -30,8 +30,8 @@
 
 #define RS232_BUFFER_SIZE 1024*10
 
-#define CONFIG_BAUDRATE_MIN 300
-#define CONFIG_BAUDRATE_MAX 230400
+#define CONFIG_BAUDRATE_MIN 100
+#define CONFIG_BAUDRATE_MAX 2000000
 #define CONFIG_PARITY_MAX 4
 #define CONFIG_STOPBITS_MIN 1
 #define CONFIG_STOPBITS_MAX 2
@@ -39,12 +39,17 @@
 #define CONFIG_WORDLENGTH_MAX 8
 #define CONFIG_FLOWCONTROL_MAX 2
 
+#define FC_SW_XON 17
+#define FC_SW_XOFF 19
+
+#define FC_RB_RX_LIMIT 64
+
 typedef enum {
-	FC_STATE_RX_OK = 0,
-	FC_STATE_RX_WAIT,
-	FC_STATE_TX_OK,
-	FC_STATE_TX_WAIT,
-} RS232FlowControlState_t;
+	FC_SW_STATE_RX_OK = 0,
+	FC_SW_STATE_RX_WAIT,
+	FC_SW_STATE_TX_OK,
+	FC_SW_STATE_TX_WAIT
+} RS232SoftwareFlowControlState_t;
 
 typedef struct {
 	bool in_progress;
@@ -77,8 +82,9 @@ typedef struct {
 
 	RS232ReadStreamStatus_t read_stream_status;
 
-	RS232FlowControlState_t flowcontrol_state_rx;
-	RS232FlowControlState_t flowcontrol_state_tx;
+	bool fc_sw_tx_xoff;
+	RS232SoftwareFlowControlState_t fc_sw_state_rx;
+	RS232SoftwareFlowControlState_t fc_sw_state_tx;
 } RS232_t;
 
 extern RS232_t rs232;
