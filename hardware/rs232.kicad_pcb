@@ -1,9 +1,9 @@
-(kicad_pcb (version 4) (host pcbnew 4.0.7-e2-6376~58~ubuntu17.04.1)
+(kicad_pcb (version 4) (host pcbnew 4.0.2+dfsg1-stable)
 
   (general
     (links 78)
     (no_connects 0)
-    (area 12.704144 82.245139 171.154861 196.440793)
+    (area 125.109499 82.909499 170.490501 118.290501)
     (thickness 1.6002)
     (drawings 23)
     (tracks 351)
@@ -6597,10 +6597,10 @@
     (pad 8 thru_hole circle (at 1.397 -2.54 180) (size 1.524 1.524) (drill 1.016) (layers *.Cu *.Mask F.SilkS)
       (net 14 "Net-(J1-Pad8)"))
     (pad 9 thru_hole circle (at 4.191 -2.54 180) (size 1.524 1.524) (drill 1.016) (layers *.Cu *.Mask F.SilkS))
-    (model conn_DBxx/db9_female_pin90deg.wrl
-      (at (xyz 0 0 0))
+    (model Connectors/DSUB9-Male.wrl
+      (at (xyz 0.61 0.42 0))
       (scale (xyz 1 1 1))
-      (rotate (xyz 0 0 0))
+      (rotate (xyz 90 180 0))
     )
   )
 
