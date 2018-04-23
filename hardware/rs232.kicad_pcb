@@ -6629,11 +6629,6 @@
       (net 22 RX))
     (pad 5 thru_hole circle (at 5.08 0 90) (size 1.524 1.524) (drill 1.016) (layers *.Cu *.Mask F.SilkS)
       (net 16 "Net-(P3-Pad5)"))
-    (model pin_array/pins_array_4x2.wrl
-      (at (xyz 0 0 0))
-      (scale (xyz 1 1 1))
-      (rotate (xyz 0 0 0))
-    )
   )
 
   (module kicad-libraries:C0402E (layer Vorderseite) (tedit 58F8BCE3) (tstamp 5A5E16C8)
