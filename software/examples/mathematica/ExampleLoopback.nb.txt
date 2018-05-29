@@ -1,0 +1,31 @@
+Needs["NETLink`"]
+LoadNETAssembly["Tinkerforge",NotebookDirectory[]<>"../../.."]
+
+(*For this example connect the RX pin to the TX pin on the same Bricklet*)
+
+host="localhost"
+port=4223
+uid="XYZ"(*Change XYZ to the UID of your RS232 Bricklet 2.0*)
+
+(*Create IPConnection and device object*)
+ipcon=NETNew["Tinkerforge.IPConnection"]
+rs232=NETNew["Tinkerforge.BrickletRS232V2",uid,ipcon]
+ipcon@Connect[host,port]
+
+(*Callback function for read callback*)
+ReadCB[sender_,message_]:=
+ Print["Message (Length: "<>ToString[N[Length[message]]]<>"): "<>FromCharacterCode[message]]
+AddEventHandler[rs232@ReadCallback,ReadCB]
+
+(*Enable read callback*)
+rs232@EnableReadCallback[]
+
+(*Write "test" string*)
+rs232@Write[ToCharacterCode["test"]]
+
+Input["Click OK to exit"]
+
+(*Clean up*)
+ipcon@Disconnect[]
+ReleaseNETObject[rs232]
+ReleaseNETObject[ipcon]
