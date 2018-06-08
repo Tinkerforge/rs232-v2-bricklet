@@ -22,7 +22,7 @@ ipcon.on(Tinkerforge.IPConnection.CALLBACK_CONNECTED,
         rs232.enableReadCallback();
 
         // Write "test" string
-        rs232.write('test'.split()); // FIXME: only sends the 't'
+        rs232.write('test'.split(''));
     }
 );
 
