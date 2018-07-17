@@ -33,7 +33,7 @@ begin
   { Assume that the message consists of ASCII characters and
     convert it from an array of chars to a string }
   SetString(str, PAnsiChar(@msg[0]), Length(msg));
-  WriteLn(Format('Message (Length: %d): "%s"', [Length(msg), str]));
+  WriteLn(Format('Message: "%s"', [str]));
 end;
 
 procedure TExample.Execute;

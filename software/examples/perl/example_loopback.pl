@@ -17,7 +17,7 @@ sub cb_read # FIXME: is not called for unknown reasons
 
     # Assume that the message consists of ASCII characters and convert it
     # from an array of chars to a string
-    print "Message (Length: " . ${@{$message}} . "): \"" . join('', @{$message}) . "\"\n";
+    print "Message: \"" . join('', @{$message}) . "\"\n";
 }
 
 my $ipcon = Tinkerforge::IPConnection->new(); # Create IP connection

@@ -14,7 +14,7 @@ from tinkerforge.bricklet_rs232_v2 import BrickletRS232V2
 def cb_read(message):
     # Assume that the message consists of ASCII characters and convert it
     # from an array of chars to a string
-    print('Message (Length: ' + str(len(message)) + '): "' + ''.join(message) + '"')
+    print('Message: "' + ''.join(message) + '"')
 
 if __name__ == "__main__":
     ipcon = IPConnection() # Create IP connection

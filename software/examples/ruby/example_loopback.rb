@@ -22,7 +22,7 @@ ipcon.connect HOST, PORT # Connect to brickd
 rs232.register_callback(BrickletRS232V2::CALLBACK_READ) do |message|
   # Assume that the message consists of ASCII characters and convert it
   # from an array of chars to a string
-  puts "Message (Length: #{message.length()}): #{message.join('')}"
+  puts "Message: #{message.join('')}"
 end
 
 # Enable read callback

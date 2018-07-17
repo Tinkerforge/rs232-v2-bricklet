@@ -20,7 +20,7 @@ void cb_read(char *message, uint16_t message_length, void *user_data) {
 	memcpy(buffer, message, message_length);
 	buffer[message_length] = '\0';
 
-	printf("Message (Length: %d): \"%s\"\n", message_length, buffer);
+	printf("Message: \"%s\"\n", buffer);
 
 	free(buffer);
 }

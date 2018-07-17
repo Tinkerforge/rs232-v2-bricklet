@@ -14,7 +14,7 @@ class Example
 	{
 		// Assume that the message consists of ASCII characters and convert it
 		// from an array of chars to a string
-		Console.WriteLine("Message (Length: " + message.Length + "): \"" + new string(message) + "\"");
+		Console.WriteLine("Message: \"" + new string(message) + "\"");
 	}
 
 	static void Main()

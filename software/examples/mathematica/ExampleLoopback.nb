@@ -22,7 +22,7 @@ Notebook[{
    RowBox[{"
 "}],
    RowBox[{"(*", "Callback function for read callback", "*)"}],
-   RowBox[{RowBox[{"ReadCB", "[", RowBox[{"sender_", ",", "message_"}], "]"}], ":=", "\[IndentingNewLine]", RowBox[{"Print", "[", RowBox[{"\"\<Message (Length: \>\"", "<>", RowBox[{"ToString", "[", RowBox[{"N", "[", RowBox[{"Length", "[", "message", "]"}], "]"}], "]"}], "<>", "\"\<): \>\"", "<>", RowBox[{"FromCharacterCode", "[", "message", "]"}]}], "]"}]}],
+   RowBox[{RowBox[{"ReadCB", "[", RowBox[{"sender_", ",", "message_"}], "]"}], ":=", "\[IndentingNewLine]", RowBox[{"Print", "[", RowBox[{"\"\<Message: \>\"", "<>", RowBox[{"FromCharacterCode", "[", "message", "]"}]}], "]"}]}],
    RowBox[{"AddEventHandler", "[", RowBox[{RowBox[{"rs232", "@", "ReadCallback"}], ",", "ReadCB"}], "]"}],
    RowBox[{"
 "}],

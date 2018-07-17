@@ -28,7 +28,7 @@ end
 
 % Callback function for read callback
 function cb_read(e)
-    fprintf("Message (Length: %d): \"%s\"\n", length(e.message), chars2string(e.message));
+    fprintf("Message: \"%s\"\n", chars2string(e.message));
 end
 
 % Convert string to array

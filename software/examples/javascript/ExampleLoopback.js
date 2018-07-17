@@ -32,7 +32,7 @@ rs232.on(Tinkerforge.BrickletRS232V2.CALLBACK_READ,
     function (message) {
         // Assume that the message consists of ASCII characters and
         // convert it from an array of chars to a string
-        console.log('Message (Length: ' + message.length + '): "' + message.join('') + '"');
+        console.log('Message: "' + message.join('') + '"');
     }
 );
 

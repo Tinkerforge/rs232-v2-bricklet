@@ -14,7 +14,7 @@ ipcon@Connect[host,port]
 
 (*Callback function for read callback*)
 ReadCB[sender_,message_]:=
- Print["Message (Length: "<>ToString[N[Length[message]]]<>"): "<>FromCharacterCode[message]]
+ Print["Message: "<>FromCharacterCode[message]]
 AddEventHandler[rs232@ReadCallback,ReadCB]
 
 (*Enable read callback*)

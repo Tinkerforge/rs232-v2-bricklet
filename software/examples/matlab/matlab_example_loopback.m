@@ -30,5 +30,5 @@ end
 
 % Callback function for read callback
 function cb_read(e)
-    fprintf('Message (Length: %g): %s\n', e.message.length(), e.message);
+    fprintf('Message: %s\n', e.message);
 end

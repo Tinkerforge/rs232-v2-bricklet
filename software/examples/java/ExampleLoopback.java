@@ -24,7 +24,7 @@ public class ExampleLoopback {
 			public void read(char[] message) {
 				// Assume that the message consists of ASCII characters and
 				// convert it from an array of chars to a string
-				System.out.println("Message (Length: " + message.length + "): \"" + new String(message) + "\"");
+				System.out.println("Message: \"" + new String(message) + "\"");
 			}
 		});
 
