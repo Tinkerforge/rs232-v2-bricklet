@@ -30,7 +30,7 @@ if __name__ == "__main__":
     rs232.enable_read_callback()
 
     # Write "test" string
-    rs232.write('test')
+    rs232.write(list('test'))
 
     raw_input("Press key to exit\n") # Use input() in Python 3
     ipcon.disconnect()

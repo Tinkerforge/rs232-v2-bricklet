@@ -55,7 +55,7 @@ begin
   rs232.EnableReadCallback;
 
   { Write "test" string }
-  rs232.Write('test');
+  rs232.Write(['t', 'e', 's', 't']);
 
   WriteLn('Press key to exit');
   ReadLn;

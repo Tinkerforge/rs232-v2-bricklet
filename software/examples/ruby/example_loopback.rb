@@ -29,7 +29,7 @@ end
 rs232.enable_read_callback
 
 # Write "test" string
-rs232.write "ööö".split(//)
+rs232.write 'test'.split ''
 
 puts 'Press key to exit'
 $stdin.gets
