@@ -14,7 +14,7 @@ type
     ipcon: TIPConnection;
     rs232: TBrickletRS232V2;
   public
-    procedure ReadCB(sender: TBrickletRS232V2; const msg: TArrayOfChar);
+    procedure ReadCB(sender: TBrickletRS232V2; const message_: TArrayOfChar);
     procedure Execute;
   end;
 
@@ -27,12 +27,12 @@ var
   e: TExample;
 
 { Callback procedure for read callback }
-procedure TExample.ReadCB(sender: TBrickletRS232V2; const msg: TArrayOfChar);
+procedure TExample.ReadCB(sender: TBrickletRS232V2; const message_: TArrayOfChar);
 var str: string;
 begin
   { Assume that the message consists of ASCII characters and
     convert it from an array of chars to a string }
-  SetString(str, PAnsiChar(@msg[0]), Length(msg));
+  SetString(str, PChar(@message_[0]), Length(message_));
   WriteLn(Format('Message: "%s"', [str]));
 end;
 
