@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                                           // Don't use device before ipcon is connected
 
     let read_receiver = rs232.get_read_callback_receiver();
-    
+
     // Spawn thread to handle received events.
     // This thread ends when the `rs232` object
     // is dropped, so there is no need for manual cleanup.
