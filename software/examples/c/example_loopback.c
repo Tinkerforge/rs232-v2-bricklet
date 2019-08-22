@@ -44,7 +44,7 @@ int main(void) {
 	// Register read callback to function cb_read
 	rs232_v2_register_callback(&rs232,
 	                           RS232_V2_CALLBACK_READ,
-	                           (void *)cb_read,
+	                           (void (*)(void))cb_read,
 	                           NULL);
 
 	// Enable read callback
