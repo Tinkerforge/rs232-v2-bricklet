@@ -1,7 +1,7 @@
 use std::{error::Error, io, thread};
 use tinkerforge::{ip_connection::IpConnection, rs232_v2_bricklet::*};
 
-// For this example connect the RX pin to the TX pin on the same Bricklet
+// For this example connect the RX1 and TX pin to receive the send message
 
 const HOST: &str = "127.0.0.1";
 const PORT: u16 = 4223;

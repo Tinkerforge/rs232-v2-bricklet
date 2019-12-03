@@ -6,7 +6,7 @@ import (
 	"github.com/Tinkerforge/go-api-bindings/rs232_v2_bricklet"
 )
 
-// For this example connect the RX pin to the TX pin on the same Bricklet
+// For this example connect the RX1 and TX pin to receive the send message
 
 const ADDR string = "localhost:4223"
 const UID string = "XYZ" // Change XYZ to the UID of your RS232 Bricklet 2.0.

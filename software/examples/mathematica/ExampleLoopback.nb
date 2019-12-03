@@ -7,7 +7,7 @@ Notebook[{
  ],
  Cell[
   BoxData[{
-   RowBox[{"(*", "For this example connect the RX pin to the TX pin on the same Bricklet", "*)"}],
+   RowBox[{"(*", "For this example connect the RX1 and TX pin to receive the send message", "*)"}],
    RowBox[{"
 "}],
    RowBox[{"host", "=", "\"\<localhost\>\""}],

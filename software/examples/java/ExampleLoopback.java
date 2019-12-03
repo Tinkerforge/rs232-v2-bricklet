@@ -1,7 +1,7 @@
 import com.tinkerforge.IPConnection;
 import com.tinkerforge.BrickletRS232V2;
 
-// For this example connect the RX pin to the TX pin on the same Bricklet
+// For this example connect the RX1 and TX pin to receive the send message
 
 public class ExampleLoopback {
 	private static final String HOST = "localhost";

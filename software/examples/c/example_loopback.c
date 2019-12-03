@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// For this example connect the RX pin to the TX pin on the same Bricklet
+// For this example connect the RX1 and TX pin to receive the send message
 
 #include "ip_connection.h"
 #include "bricklet_rs232_v2.h"

@@ -1,7 +1,7 @@
 Imports System
 Imports Tinkerforge
 
-' For this example connect the RX pin to the TX pin on the same Bricklet
+' For this example connect the RX1 and TX pin to receive the send message
 
 Module ExampleLoopback
     Const HOST As String = "localhost"
