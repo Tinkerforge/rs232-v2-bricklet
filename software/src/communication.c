@@ -86,8 +86,6 @@ BootloaderHandleMessageResponse read_low_level(const ReadLowLevel *data, ReadLow
 
 	// This function operates only when read callback is disabled.
 	if(rs232.read_callback_enabled) {
-		reset_read_stream_status();
-
 		return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 	}
 
@@ -296,7 +294,6 @@ bool handle_read_low_level_callback(void) {
 
 	if(!is_buffered) {
 		if(!rs232.read_callback_enabled) {
-			reset_read_stream_status();
 			is_buffered = false;
 
 			return false;
