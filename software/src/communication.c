@@ -43,7 +43,7 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_BUFFER_CONFIG: return get_buffer_config(message, response);
 		case FID_GET_BUFFER_STATUS: return get_buffer_status(message, response);
 		case FID_GET_ERROR_COUNT: return get_error_count(message, response);
-		case FID_SET_AVAILABLE_CALLBACK: return set_available_callback(message);
+		case FID_SET_FRAME_READABLE_CALLBACK_CONFIGURATION: return set_frame_readable_callback_configuration(message);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -287,9 +287,9 @@ BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data, GetEr
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
-BootloaderHandleMessageResponse set_available_callback(const SetAvailableCallback *data) {
-	rs232.available_cb_frame_size = data->frame_size;
-	rs232.available_cb_already_sent = false;
+BootloaderHandleMessageResponse set_frame_readable_callback_configuration(const SetFrameReadableCallbackConfiguration *data) {
+	rs232.frame_readable_cb_frame_size = data->frame_size;
+	rs232.frame_readable_cb_already_sent = false;
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
@@ -409,32 +409,32 @@ bool handle_error_count_callback(void) {
 	return false;
 }
 
-bool handle_available_callback(void) {
+bool handle_frame_readable_callback(void) {
 	static bool is_buffered = false;
-	static Available_Callback cb;
+	static FrameReadable_Callback cb;
 	static uint16_t used = 0;
 
 	if(!is_buffered) {
-		if(rs232.available_cb_frame_size == 0) {
+		if(rs232.frame_readable_cb_frame_size == 0) {
 			return false;
 		}
 
-		if(rs232.available_cb_already_sent) {
+		if(rs232.frame_readable_cb_already_sent) {
 			return false;
 		}
 
 		used = ringbuffer_get_used(&rs232.rb_rx);
-		if (used < rs232.available_cb_frame_size) {
+		if (used < rs232.frame_readable_cb_frame_size) {
 			return false;
 		}
-		rs232.available_cb_already_sent = true;
+		rs232.frame_readable_cb_already_sent = true;
 
-		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(Available_Callback), FID_CALLBACK_AVAILABLE);
-		cb.count = used;
+		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(FrameReadable_Callback), FID_CALLBACK_FRAME_READABLE);
+		cb.frame_count = used / rs232.frame_readable_cb_frame_size;
 	}
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
-		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(Available_Callback));
+		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(FrameReadable_Callback));
 		is_buffered = false;
 		return true;
 	} else {

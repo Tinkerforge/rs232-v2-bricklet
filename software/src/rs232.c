@@ -344,7 +344,7 @@ void reset_read_stream_status() {
 	rs232.read_stream_status.stream_sent = 0;
 	rs232.read_stream_status.stream_chunk_offset = 0;
 	rs232.read_stream_status.stream_total_length = 0;
-	rs232.available_cb_already_sent = false;
+	rs232.frame_readable_cb_already_sent = false;
 }
 
 void rs232_init() {
@@ -365,7 +365,7 @@ void rs232_init() {
 	rs232.do_error_count_callback = false;
 
 	rs232.read_callback_enabled = false;
-	rs232.available_cb_frame_size = 0;
+	rs232.frame_readable_cb_frame_size = 0;
 
 	rs232.buffer_size_rx = RS232_BUFFER_SIZE / 2;
 	rs232.buffer_size_tx = RS232_BUFFER_SIZE / 2;
