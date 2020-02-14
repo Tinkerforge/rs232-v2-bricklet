@@ -73,6 +73,8 @@ typedef struct {
 	bool do_error_count_callback;
 
 	bool read_callback_enabled;
+	uint16_t available_cb_frame_size;
+	bool available_cb_already_sent;
 
 	Ringbuffer rb_rx;
 	Ringbuffer rb_tx;

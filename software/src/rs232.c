@@ -42,7 +42,7 @@
  */
 
 // RX part of buffer always starts from 0.
-uint8_t  *const rs232_rb_rx_buffer = &(rs232.buffer[0]); 
+uint8_t  *const rs232_rb_rx_buffer = &(rs232.buffer[0]);
 uint16_t *const rs232_rb_rx_end = &(rs232.rb_rx.end);
 uint16_t *const rs232_rb_rx_start = &(rs232.rb_rx.start);
 uint16_t *const rs232_rb_rx_size = &(rs232.rb_rx.size);
@@ -259,7 +259,7 @@ static void rs232_init_hardware() {
 		XMC_USIC_CH_RXFIFO_INTERRUPT_NODE_POINTER_STANDARD,
 		RS232_SERVICE_REQUEST_RX
 	);
-	
+
 	XMC_USIC_CH_RXFIFO_SetInterruptNodePointer(
 		RS232_USIC,
 		XMC_USIC_CH_RXFIFO_INTERRUPT_NODE_POINTER_ALTERNATE,
@@ -344,6 +344,7 @@ void reset_read_stream_status() {
 	rs232.read_stream_status.stream_sent = 0;
 	rs232.read_stream_status.stream_chunk_offset = 0;
 	rs232.read_stream_status.stream_total_length = 0;
+	rs232.available_cb_already_sent = false;
 }
 
 void rs232_init() {
@@ -364,6 +365,7 @@ void rs232_init() {
 	rs232.do_error_count_callback = false;
 
 	rs232.read_callback_enabled = false;
+	rs232.available_cb_frame_size = 0;
 
 	rs232.buffer_size_rx = RS232_BUFFER_SIZE / 2;
 	rs232.buffer_size_tx = RS232_BUFFER_SIZE / 2;

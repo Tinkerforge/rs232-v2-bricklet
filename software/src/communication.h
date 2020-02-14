@@ -80,9 +80,11 @@ void communication_init(void);
 #define FID_GET_BUFFER_CONFIG 9
 #define FID_GET_BUFFER_STATUS 10
 #define FID_GET_ERROR_COUNT 11
+#define FID_SET_AVAILABLE_CALLBACK 14
 
 #define FID_CALLBACK_READ_LOW_LEVEL 12
 #define FID_CALLBACK_ERROR_COUNT 13
+#define FID_CALLBACK_AVAILABLE 15
 
 typedef struct {
 	TFPMessageHeader header;
@@ -196,6 +198,15 @@ typedef struct {
 	uint32_t error_count_parity;
 } __attribute__((__packed__)) ErrorCount_Callback;
 
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t frame_size;
+} __attribute__((__packed__)) SetAvailableCallback;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t count;
+} __attribute__((__packed__)) Available_Callback;
 
 // Function prototypes
 BootloaderHandleMessageResponse write_low_level(const WriteLowLevel *data, WriteLowLevel_Response *response);
@@ -209,16 +220,19 @@ BootloaderHandleMessageResponse set_buffer_config(const SetBufferConfig *data);
 BootloaderHandleMessageResponse get_buffer_config(const GetBufferConfig *data, GetBufferConfig_Response *response);
 BootloaderHandleMessageResponse get_buffer_status(const GetBufferStatus *data, GetBufferStatus_Response *response);
 BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data, GetErrorCount_Response *response);
+BootloaderHandleMessageResponse set_available_callback(const SetAvailableCallback *data);
 
 // Callbacks
 bool handle_read_low_level_callback(void);
 bool handle_error_count_callback(void);
+bool handle_available_callback(void);
 
 #define COMMUNICATION_CALLBACK_TICK_WAIT_MS 1
-#define COMMUNICATION_CALLBACK_HANDLER_NUM 2
+#define COMMUNICATION_CALLBACK_HANDLER_NUM 3
 #define COMMUNICATION_CALLBACK_LIST_INIT \
 	handle_read_low_level_callback, \
 	handle_error_count_callback, \
+	handle_available_callback, \
 
 
 #endif
