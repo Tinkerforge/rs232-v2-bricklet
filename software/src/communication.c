@@ -172,6 +172,7 @@ BootloaderHandleMessageResponse enable_read_callback(const EnableReadCallback *d
 	logd("[+] RS232-V2: enable_read_callback()\n\r");
 
 	rs232.read_callback_enabled = true;
+	rs232.frame_readable_cb_frame_size = 0;
 
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
@@ -289,6 +290,9 @@ BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data, GetEr
 }
 
 BootloaderHandleMessageResponse set_frame_readable_callback_configuration(const SetFrameReadableCallbackConfiguration *data) {
+	if(data->frame_size > 0) {
+		rs232.read_callback_enabled = false;
+	}
 	rs232.frame_readable_cb_frame_size = data->frame_size;
 	rs232.frame_readable_cb_already_sent = false;
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
