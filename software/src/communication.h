@@ -81,10 +81,11 @@ void communication_init(void);
 #define FID_GET_BUFFER_STATUS 10
 #define FID_GET_ERROR_COUNT 11
 #define FID_SET_FRAME_READABLE_CALLBACK_CONFIGURATION 14
+#define FID_GET_FRAME_READABLE_CALLBACK_CONFIGURATION 15
 
 #define FID_CALLBACK_READ_LOW_LEVEL 12
 #define FID_CALLBACK_ERROR_COUNT 13
-#define FID_CALLBACK_FRAME_READABLE 15
+#define FID_CALLBACK_FRAME_READABLE 16
 
 typedef struct {
 	TFPMessageHeader header;
@@ -205,6 +206,16 @@ typedef struct {
 
 typedef struct {
 	TFPMessageHeader header;
+	uint16_t frame_size;
+} __attribute__((__packed__)) GetFrameReadableCallbackConfiguration;
+
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t frame_size;
+} __attribute__((__packed__)) GetFrameReadableCallbackConfiguration_Response;
+
+typedef struct {
+	TFPMessageHeader header;
 	uint16_t frame_count;
 } __attribute__((__packed__)) FrameReadable_Callback;
 
@@ -221,6 +232,7 @@ BootloaderHandleMessageResponse get_buffer_config(const GetBufferConfig *data, G
 BootloaderHandleMessageResponse get_buffer_status(const GetBufferStatus *data, GetBufferStatus_Response *response);
 BootloaderHandleMessageResponse get_error_count(const GetErrorCount *data, GetErrorCount_Response *response);
 BootloaderHandleMessageResponse set_frame_readable_callback_configuration(const SetFrameReadableCallbackConfiguration *data);
+BootloaderHandleMessageResponse get_frame_readable_callback_configuration(const GetFrameReadableCallbackConfiguration *data, GetFrameReadableCallbackConfiguration_Response *response);
 
 // Callbacks
 bool handle_read_low_level_callback(void);

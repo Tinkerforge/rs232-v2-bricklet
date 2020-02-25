@@ -44,6 +44,7 @@ BootloaderHandleMessageResponse handle_message(const void *message, void *respon
 		case FID_GET_BUFFER_STATUS: return get_buffer_status(message, response);
 		case FID_GET_ERROR_COUNT: return get_error_count(message, response);
 		case FID_SET_FRAME_READABLE_CALLBACK_CONFIGURATION: return set_frame_readable_callback_configuration(message);
+		case FID_GET_FRAME_READABLE_CALLBACK_CONFIGURATION: return get_frame_readable_callback_configuration(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
 }
@@ -291,6 +292,13 @@ BootloaderHandleMessageResponse set_frame_readable_callback_configuration(const 
 	rs232.frame_readable_cb_frame_size = data->frame_size;
 	rs232.frame_readable_cb_already_sent = false;
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
+}
+
+BootloaderHandleMessageResponse get_frame_readable_callback_configuration(const GetFrameReadableCallbackConfiguration *data, GetFrameReadableCallbackConfiguration_Response *response) {
+	response->header.length = sizeof(GetFrameReadableCallbackConfiguration_Response);
+	response->frame_size = rs232.frame_readable_cb_frame_size;
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
 bool handle_read_low_level_callback(void) {
