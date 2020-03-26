@@ -11,5 +11,5 @@
 - Don't reset read stream in getter if callback is enabled and vice versa
 - Add frame readable callback
 
-2020-03-26: 2.0.4 (TBD)
+2020-03-26: 2.0.4 (12984d1)
 - Make sure there are no glitches on TX line during configuration change
