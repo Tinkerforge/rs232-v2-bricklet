@@ -184,6 +184,8 @@ void __attribute__((optimize("-O3"))) rs232_rxa_irq_handler() {
 	rs232._error_count_parity++;
 }
 
+
+
 static void rs232_init_hardware() {
 	logd("[+] RS232-V2: rs232_init_hardware()\n\r");
 
@@ -193,7 +195,7 @@ static void rs232_init_hardware() {
 		.output_level = XMC_GPIO_OUTPUT_LEVEL_LOW
 	};
 
-  XMC_GPIO_CONFIG_t cts_pin_config = {
+	XMC_GPIO_CONFIG_t cts_pin_config = {
 		.mode = XMC_GPIO_MODE_INPUT_PULL_DOWN,
 	};
 
@@ -203,17 +205,19 @@ static void rs232_init_hardware() {
 		.input_hysteresis = XMC_GPIO_INPUT_HYSTERESIS_STANDARD
 	};
 
-	// TX pin configuration.
-	const XMC_GPIO_CONFIG_t tx_pin_config = {
-		.mode = RS232_TX_PIN_AF,
+	// Configure TX pin high during configuration,
+	// otherwise there can be glitches on TX line if
+	// configuration changes.
+	XMC_GPIO_CONFIG_t tx_pin_config_high = {
+		.mode = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
 		.output_level = XMC_GPIO_OUTPUT_LEVEL_HIGH
 	};
 
 	// Configure  pins.
+	XMC_GPIO_Init(RS232_TX_PIN, &tx_pin_config_high);
 	XMC_GPIO_Init(RS232_RTS_PIN, &rts_pin_config);
 	XMC_GPIO_Init(RS232_CTS_PIN, &cts_pin_config);
 	XMC_GPIO_Init(RS232_RX_PIN, &rx_pin_config);
-	XMC_GPIO_Init(RS232_TX_PIN, &tx_pin_config);
 
 	// Initialize USIC channel in UART mode.
 
@@ -301,6 +305,14 @@ static void rs232_init_hardware() {
 
 	// Restart UART: Start.
 	XMC_UART_CH_Start(RS232_USIC);
+
+
+	// TX pin configuration.
+	const XMC_GPIO_CONFIG_t tx_pin_config = {
+		.mode = RS232_TX_PIN_AF,
+		.output_level = XMC_GPIO_OUTPUT_LEVEL_HIGH
+	};
+	XMC_GPIO_Init(RS232_TX_PIN, &tx_pin_config);
 
 	XMC_USIC_CH_RXFIFO_EnableEvent(
 		RS232_USIC,
