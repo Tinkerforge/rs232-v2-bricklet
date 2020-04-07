@@ -16,7 +16,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let read_receiver = rs232.get_read_callback_receiver();
 
+<<<<<<< Updated upstream
     // Spawn thread to handle received callback messages.
+=======
+    // Spawn thread to handle received events.
+>>>>>>> Stashed changes
     // This thread ends when the `rs232` object
     // is dropped, so there is no need for manual cleanup.
     thread::spawn(move || {
