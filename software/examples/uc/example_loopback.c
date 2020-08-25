@@ -1,9 +1,9 @@
-// For this example connect the RX1 and TX pin to receive the send message
-
 #include <string.h>
 
 #include "bindings/hal_common.h"
 #include "bindings/bricklet_rs232_v2.h"
+
+// For this example connect the RX1 and TX pin to receive the send message
 
 #define UID "XYZ" // Change XYZ to the UID of your RS232 Bricklet 2.0
 
@@ -17,8 +17,8 @@ void read_low_level_handler(TF_RS232V2 *device, uint16_t message_length, uint16_
 
 	bool last_chunk = message_chunk_offset + 60 > message_length;
 
-    uint16_t to_copy = 60;
-    if (last_chunk) {
+	uint16_t to_copy = 60;
+	if (last_chunk) {
 		//This is the last chunk, only read the valid part of the message
 		to_copy = message_length - message_chunk_offset;
 	}
@@ -30,12 +30,11 @@ void read_low_level_handler(TF_RS232V2 *device, uint16_t message_length, uint16_
 		tf_hal_printf("Message: \"", buffer);
 	}
 
-    tf_hal_printf("%s", buffer);
-    if(last_chunk) {
+	tf_hal_printf("%s", buffer);
+	if(last_chunk) {
 		tf_hal_printf("\"\n", buffer);
-    }
+	}
 }
-
 
 TF_RS232V2 rs232;
 
