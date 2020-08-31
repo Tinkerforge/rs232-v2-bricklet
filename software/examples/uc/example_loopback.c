@@ -30,12 +30,12 @@ static void read_low_level_handler(TF_RS232V2 *device, uint16_t message_length, 
 	buffer[to_copy] = '\0';
 
 	if(message_chunk_offset == 0) {
-		tf_hal_printf("Message: \"", buffer);
+		tf_hal_printf("Message: \"");
 	}
 
 	tf_hal_printf("%s", buffer);
 	if(last_chunk) {
-		tf_hal_printf("\"\n", buffer);
+		tf_hal_printf("\"\n");
 	}
 }
 
