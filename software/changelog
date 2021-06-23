@@ -14,5 +14,5 @@
 2020-03-26: 2.0.4 (12984d1)
 - Make sure there are no glitches on TX line during configuration change
 
-2020-06-23: 2.0.5 (TBD)
+2020-06-23: 2.0.5 (3e2aecc)
 - Use XMC1403 as minimum requirement (was 1404)
