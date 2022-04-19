@@ -11,8 +11,8 @@
 
 #define UID "XYZ" // Change XYZ to the UID of your RS232 Bricklet 2.0
 
-void example_setup(TF_HalContext *hal);
-void example_loop(TF_HalContext *hal);
+void example_setup(TF_HAL *hal);
+void example_loop(TF_HAL *hal);
 
 void check(int rc, const char* msg);
 
@@ -45,7 +45,7 @@ static void read_low_level_handler(TF_RS232V2 *device, uint16_t message_length, 
 
 static TF_RS232V2 rs232;
 
-void example_setup(TF_HalContext *hal) {
+void example_setup(TF_HAL *hal) {
 	// Create device object
 	check(tf_rs232_v2_create(&rs232, UID, hal), "create device object");
 
@@ -64,7 +64,7 @@ void example_setup(TF_HalContext *hal) {
 	check(tf_rs232_v2_write(&rs232, message, 4, &written), "call write");
 }
 
-void example_loop(TF_HalContext *hal) {
+void example_loop(TF_HAL *hal) {
 	// Poll for callbacks
 	tf_hal_callback_tick(hal, 0);
 }
