@@ -2,8 +2,6 @@
 // It requires usage of the example driver specific to your platform.
 // See the HAL documentation.
 
-#include <string.h>
-
 #include "src/bindings/hal_common.h"
 #include "src/bindings/bricklet_rs232_v2.h"
 
